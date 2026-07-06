@@ -4,8 +4,10 @@ import {
 	PanelBody,
 	SelectControl,
 	TextControl,
-	ToggleGroupControl,
-	ToggleGroupControlOption,
+	ToggleGroupControl as StableToggleGroupControl,
+	__experimentalToggleGroupControl as ExperimentalToggleGroupControl,
+	ToggleGroupControlOption as StableToggleGroupControlOption,
+	__experimentalToggleGroupControlOption as ExperimentalToggleGroupControlOption,
 	Placeholder,
 	Notice,
 	Spinner,
@@ -13,6 +15,11 @@ import {
 import { useEffect, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { addQueryArgs } from '@wordpress/url';
+
+// Older Gutenberg bundles (e.g. the greenpeace.org/israel dev site) only expose
+// these as __experimental*; newer ones expose the stable name. Support both.
+const ToggleGroupControl = StableToggleGroupControl || ExperimentalToggleGroupControl;
+const ToggleGroupControlOption = StableToggleGroupControlOption || ExperimentalToggleGroupControlOption;
 
 const DEFAULT_TEMPLATES = {
 	he: '{name} חתם/ה על העצומה {time_ago}',
