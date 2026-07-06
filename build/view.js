@@ -1,0 +1,1 @@
+document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll(".wp-block-social-proof-signature").forEach(e=>{const t=e.querySelectorAll(".social-proof__item");if(t.length<2)return;const o=parseInt(e.dataset.rotateInterval,10)||1500;let a=0;setInterval(()=>{t[a].classList.remove("is-active"),a=(a+1)%t.length,t[a].classList.add("is-active")},o)})});

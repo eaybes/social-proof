@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "social-proof/signature",
+	"title": "Social Proof",
+	"category": "widgets",
+	"icon": "groups",
+	"description": "מציג את שלוש החתימות האחרונות על עצומה (Gravity Forms) בסבב מתחלף, לבניית אמון חברתי בעמוד.",
+	"keywords": [ "social proof", "עצומה", "חתימות", "gravity forms", "petition" ],
+	"textdomain": "social-proof",
+	"attributes": {
+		"formId": { "type": "number", "default": 0 },
+		"template": { "type": "string", "default": "" },
+		"language": { "type": "string", "default": "he" },
+		"align": { "type": "string", "default": "right" }
+	},
+	"supports": {
+		"html": false,
+		"align": false,
+		"color": false
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"viewScript": "file:./view.js",
+	"render": "file:./render.php"
+}

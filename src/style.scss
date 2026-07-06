@@ -1,0 +1,44 @@
+.wp-block-social-proof-signature {
+	display: flex;
+
+	&.social-proof-align-right {
+		justify-content: flex-end;
+	}
+
+	&.social-proof-align-center {
+		justify-content: center;
+	}
+
+	&.social-proof-align-left {
+		justify-content: flex-start;
+	}
+
+	.social-proof__viewport {
+		display: inline-flex;
+		align-items: center;
+		min-height: 1.6em;
+		padding: 0.5em 1.25em;
+		background: #f0f0f0;
+		border-radius: 999px;
+		font-size: 0.95rem;
+	}
+
+	.social-proof__item {
+		display: none;
+		white-space: nowrap;
+
+		&.is-active {
+			display: inline-block;
+			animation: social-proof-fade 0.4s ease;
+		}
+	}
+}
+
+@keyframes social-proof-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}

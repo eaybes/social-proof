@@ -1,0 +1,13 @@
+{
+  "name": "social-proof",
+  "version": "1.0.0",
+  "description": "Social Proof block showing recent Gravity Forms petition signatures",
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "format": "wp-scripts format"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.0.0"
+  }
+}
