@@ -67,10 +67,10 @@ class Social_Proof_Gravity_Forms {
 			return $entries;
 		}
 
-		$form          = GFAPI::get_form( $form_id );
-		$name_field_id = $form ? self::find_name_field_id( $form ) : null;
+		$form       = GFAPI::get_form( $form_id );
+		$name_field = $form ? self::find_name_fields( $form ) : null;
 
-		if ( ! $form || null === $name_field_id ) {
+		if ( ! $form || null === $name_field ) {
 			set_transient( $cache_key, array(), self::CACHE_TTL );
 			return array();
 		}
@@ -90,8 +90,12 @@ class Social_Proof_Gravity_Forms {
 
 		$entries = array();
 		foreach ( (array) $raw_entries as $entry ) {
+			$name = self::format_name( $entry, $name_field );
+			if ( '' === $name ) {
+				continue;
+			}
 			$entries[] = array(
-				'name'      => self::format_name( $entry, $name_field_id ),
+				'name'      => $name,
 				'timestamp' => strtotime( $entry['date_created'] . ' UTC' ),
 			);
 		}
@@ -101,24 +105,80 @@ class Social_Proof_Gravity_Forms {
 		return $entries;
 	}
 
-	private static function find_name_field_id( $form ) {
+	/**
+	 * Finds the field(s) that hold the signer's name.
+	 *
+	 * Supports Gravity Forms' composite "Name" field type (prefix/first/
+	 * middle/last/suffix sub-inputs), and falls back to two separate plain
+	 * text fields labeled first/last name (English or Hebrew) — a common
+	 * pattern for simple petition forms.
+	 *
+	 * @return array{type:string,id?:int,first_id?:int,last_id?:int|null}|null
+	 */
+	private static function find_name_fields( $form ) {
 		if ( empty( $form['fields'] ) ) {
 			return null;
 		}
 
+		$first_id = null;
+		$last_id  = null;
+
 		foreach ( $form['fields'] as $field ) {
-			$type = is_object( $field ) ? $field->type : $field['type'];
+			$type  = is_object( $field ) ? $field->type : $field['type'];
+			$id    = is_object( $field ) ? $field->id : $field['id'];
+			$label = is_object( $field ) ? ( $field->label ?? '' ) : ( $field['label'] ?? '' );
+
 			if ( 'name' === $type ) {
-				return is_object( $field ) ? $field->id : $field['id'];
+				return array(
+					'type' => 'composite',
+					'id'   => $id,
+				);
 			}
+
+			if ( null === $first_id && self::label_matches( $label, array( 'first name', 'שם פרטי' ) ) ) {
+				$first_id = $id;
+			} elseif ( null === $last_id && self::label_matches( $label, array( 'last name', 'surname', 'שם משפחה', 'שם המשפחה' ) ) ) {
+				$last_id = $id;
+			}
+		}
+
+		if ( null !== $first_id ) {
+			return array(
+				'type'     => 'split',
+				'first_id' => $first_id,
+				'last_id'  => $last_id,
+			);
 		}
 
 		return null;
 	}
 
-	private static function format_name( $entry, $name_field_id ) {
-		$first        = trim( rgar( $entry, $name_field_id . '.3' ) );
-		$last         = trim( rgar( $entry, $name_field_id . '.6' ) );
+	private static function label_matches( $label, $needles ) {
+		$label = mb_strtolower( trim( (string) $label ) );
+
+		if ( '' === $label ) {
+			return false;
+		}
+
+		foreach ( $needles as $needle ) {
+			if ( false !== mb_strpos( $label, mb_strtolower( $needle ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static function format_name( $entry, $name_field ) {
+		if ( 'composite' === $name_field['type'] ) {
+			$id    = $name_field['id'];
+			$first = trim( rgar( $entry, $id . '.3' ) );
+			$last  = trim( rgar( $entry, $id . '.6' ) );
+		} else {
+			$first = trim( rgar( $entry, (string) $name_field['first_id'] ) );
+			$last  = null !== $name_field['last_id'] ? trim( rgar( $entry, (string) $name_field['last_id'] ) ) : '';
+		}
+
 		$last_initial = '' !== $last ? mb_substr( $last, 0, 1 ) . '.' : '';
 
 		return trim( $first . ' ' . $last_initial );

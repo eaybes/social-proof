@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Social Proof
  * Description: בלוק Social Proof שמציג את שלוש החתימות האחרונות על עצומה (Gravity Forms) בסבב מתחלף, לבניית אמון חברתי בעמוד.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Requires at least: 6.3
  * Requires PHP: 8.0
  * Text Domain: social-proof
@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'SOCIAL_PROOF_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SOCIAL_PROOF_URL', plugin_dir_url( __FILE__ ) );
-define( 'SOCIAL_PROOF_VERSION', '1.0.1' );
+define( 'SOCIAL_PROOF_VERSION', '1.0.2' );
 
 require_once SOCIAL_PROOF_DIR . 'includes/class-social-proof-gravity-forms.php';
 require_once SOCIAL_PROOF_DIR . 'includes/class-social-proof-rest.php';
