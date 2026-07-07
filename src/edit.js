@@ -7,10 +7,6 @@ import {
 	ToggleControl,
 	RangeControl,
 	ColorPalette,
-	ToggleGroupControl as StableToggleGroupControl,
-	__experimentalToggleGroupControl as ExperimentalToggleGroupControl,
-	ToggleGroupControlOption as StableToggleGroupControlOption,
-	__experimentalToggleGroupControlOption as ExperimentalToggleGroupControlOption,
 	Placeholder,
 	Notice,
 	Spinner,
@@ -18,11 +14,6 @@ import {
 import { useEffect, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { addQueryArgs } from '@wordpress/url';
-
-// Older Gutenberg bundles (e.g. the greenpeace.org/israel dev site) only expose
-// these as __experimental*; newer ones expose the stable name. Support both.
-const ToggleGroupControl = StableToggleGroupControl || ExperimentalToggleGroupControl;
-const ToggleGroupControlOption = StableToggleGroupControlOption || ExperimentalToggleGroupControlOption;
 
 const DEFAULT_TEMPLATES = {
 	he: '{name} חתם/ה על העצומה {time_ago}',
@@ -32,8 +23,11 @@ const DEFAULT_TEMPLATES = {
 // Built by hand from two colors + an angle instead of using GradientPicker —
 // that component crashed ("Cannot read properties of undefined (reading
 // 'orientation')") on the greenpeace.org/israel dev site's older Gutenberg
-// bundle. ColorPalette + RangeControl are much older/simpler APIs with no
-// such history there.
+// bundle. The same crash kept happening after removing it, which pointed to
+// ToggleGroupControl itself (also built on a composite/orientation pattern
+// internally) — so this block avoids it entirely and uses plain SelectControl
+// everywhere instead. Both ColorPalette and RangeControl are much older,
+// simpler APIs with no such history there.
 function getGradient( attributes ) {
 	const { gradientColor1, gradientColor2, gradientAngle } = attributes;
 	return `linear-gradient(${ gradientAngle }deg, ${ gradientColor1 } 0%, ${ gradientColor2 } 100%)`;
@@ -136,10 +130,13 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 						disabled={ loadingForms }
 					/>
-					<ToggleGroupControl
+					<SelectControl
 						label={ __( 'שפה', 'social-proof' ) }
 						value={ language }
-						isBlock
+						options={ [
+							{ label: __( 'עברית', 'social-proof' ), value: 'he' },
+							{ label: __( 'English', 'social-proof' ), value: 'en' },
+						] }
 						onChange={ ( value ) => {
 							const nextAttributes = { language: value };
 							if ( ! template || template === DEFAULT_TEMPLATES[ language ] ) {
@@ -147,20 +144,17 @@ export default function Edit( { attributes, setAttributes } ) {
 							}
 							setAttributes( nextAttributes );
 						} }
-					>
-						<ToggleGroupControlOption value="he" label={ __( 'עברית', 'social-proof' ) } />
-						<ToggleGroupControlOption value="en" label={ __( 'English', 'social-proof' ) } />
-					</ToggleGroupControl>
-					<ToggleGroupControl
+					/>
+					<SelectControl
 						label={ __( 'יישור הבלוק', 'social-proof' ) }
 						value={ align }
-						isBlock
+						options={ [
+							{ label: __( 'ימין', 'social-proof' ), value: 'right' },
+							{ label: __( 'מרכז', 'social-proof' ), value: 'center' },
+							{ label: __( 'שמאל', 'social-proof' ), value: 'left' },
+						] }
 						onChange={ ( value ) => setAttributes( { align: value } ) }
-					>
-						<ToggleGroupControlOption value="right" label={ __( 'ימין', 'social-proof' ) } />
-						<ToggleGroupControlOption value="center" label={ __( 'מרכז', 'social-proof' ) } />
-						<ToggleGroupControlOption value="left" label={ __( 'שמאל', 'social-proof' ) } />
-					</ToggleGroupControl>
+					/>
 					<TextControl
 						label={ __( 'טקסט', 'social-proof' ) }
 						help={ __( 'ניתן להשתמש בתגיות {name} ו-{time_ago}', 'social-proof' ) }
@@ -180,15 +174,15 @@ export default function Edit( { attributes, setAttributes } ) {
 						value={ textColor }
 						onChange={ ( value ) => setAttributes( { textColor: value || '' } ) }
 					/>
-					<ToggleGroupControl
+					<SelectControl
 						label={ __( 'רקע', 'social-proof' ) }
 						value={ backgroundType }
-						isBlock
+						options={ [
+							{ label: __( 'אחיד', 'social-proof' ), value: 'solid' },
+							{ label: __( 'מעבר גוונים', 'social-proof' ), value: 'gradient' },
+						] }
 						onChange={ ( value ) => setAttributes( { backgroundType: value } ) }
-					>
-						<ToggleGroupControlOption value="solid" label={ __( 'אחיד', 'social-proof' ) } />
-						<ToggleGroupControlOption value="gradient" label={ __( 'מעבר גוונים', 'social-proof' ) } />
-					</ToggleGroupControl>
+					/>
 					{ 'gradient' === backgroundType ? (
 						<>
 							<p>{ __( 'צבע התחלה', 'social-proof' ) }</p>
@@ -217,16 +211,16 @@ export default function Edit( { attributes, setAttributes } ) {
 					) }
 				</PanelBody>
 				<PanelBody title={ __( 'אנימציה', 'social-proof' ) } initialOpen={ false }>
-					<ToggleGroupControl
+					<SelectControl
 						label={ __( 'סגנון מעבר בין שמות', 'social-proof' ) }
 						value={ animationStyle }
-						isBlock
+						options={ [
+							{ label: __( 'עמעום', 'social-proof' ), value: 'fade' },
+							{ label: __( 'החלקה', 'social-proof' ), value: 'slide' },
+							{ label: __( 'ריחוף', 'social-proof' ), value: 'float' },
+						] }
 						onChange={ ( value ) => setAttributes( { animationStyle: value } ) }
-					>
-						<ToggleGroupControlOption value="fade" label={ __( 'עמעום', 'social-proof' ) } />
-						<ToggleGroupControlOption value="slide" label={ __( 'החלקה', 'social-proof' ) } />
-						<ToggleGroupControlOption value="float" label={ __( 'ריחוף', 'social-proof' ) } />
-					</ToggleGroupControl>
+					/>
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
