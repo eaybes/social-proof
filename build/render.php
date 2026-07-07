@@ -9,16 +9,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$form_id            = isset( $attributes['formId'] ) ? (int) $attributes['formId'] : 0;
-$language           = isset( $attributes['language'] ) && 'en' === $attributes['language'] ? 'en' : 'he';
-$align              = isset( $attributes['align'] ) ? $attributes['align'] : 'right';
-$text_color         = isset( $attributes['textColor'] ) ? $attributes['textColor'] : '';
-$background_type    = isset( $attributes['backgroundType'] ) && 'gradient' === $attributes['backgroundType'] ? 'gradient' : 'solid';
-$background_color   = isset( $attributes['backgroundColor'] ) ? $attributes['backgroundColor'] : '';
-$background_gradient = isset( $attributes['backgroundGradient'] ) ? $attributes['backgroundGradient'] : '';
-$animation_style    = isset( $attributes['animationStyle'] ) ? $attributes['animationStyle'] : 'fade';
-$fixed_timestamps   = ! empty( $attributes['fixedTimestamps'] );
-$template           = ! empty( $attributes['template'] )
+$form_id          = isset( $attributes['formId'] ) ? (int) $attributes['formId'] : 0;
+$language         = isset( $attributes['language'] ) && 'en' === $attributes['language'] ? 'en' : 'he';
+$align            = isset( $attributes['align'] ) ? $attributes['align'] : 'right';
+$text_color       = isset( $attributes['textColor'] ) ? $attributes['textColor'] : '';
+$background_type  = isset( $attributes['backgroundType'] ) && 'gradient' === $attributes['backgroundType'] ? 'gradient' : 'solid';
+$background_color = isset( $attributes['backgroundColor'] ) ? $attributes['backgroundColor'] : '';
+$gradient_color_1 = isset( $attributes['gradientColor1'] ) ? $attributes['gradientColor1'] : '#1d9e75';
+$gradient_color_2 = isset( $attributes['gradientColor2'] ) ? $attributes['gradientColor2'] : '#0693e3';
+$gradient_angle   = isset( $attributes['gradientAngle'] ) ? (int) $attributes['gradientAngle'] : 135;
+$animation_style  = isset( $attributes['animationStyle'] ) ? $attributes['animationStyle'] : 'fade';
+$fixed_timestamps = ! empty( $attributes['fixedTimestamps'] );
+$template         = ! empty( $attributes['template'] )
 	? $attributes['template']
 	: Social_Proof_Gravity_Forms::default_template( $language );
 
@@ -42,7 +44,9 @@ $wrapper_attributes = get_block_wrapper_attributes(
 	)
 );
 
-$background = ( 'gradient' === $background_type && $background_gradient ) ? $background_gradient : $background_color;
+$background = 'gradient' === $background_type
+	? sprintf( 'linear-gradient(%ddeg, %s 0%%, %s 100%%)', $gradient_angle, $gradient_color_1, $gradient_color_2 )
+	: $background_color;
 
 $pill_style = array();
 if ( $text_color ) {

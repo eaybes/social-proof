@@ -5,9 +5,8 @@ import {
 	SelectControl,
 	TextControl,
 	ToggleControl,
+	RangeControl,
 	ColorPalette,
-	GradientPicker as StableGradientPicker,
-	__experimentalGradientPicker as ExperimentalGradientPicker,
 	ToggleGroupControl as StableToggleGroupControl,
 	__experimentalToggleGroupControl as ExperimentalToggleGroupControl,
 	ToggleGroupControlOption as StableToggleGroupControlOption,
@@ -24,22 +23,25 @@ import { addQueryArgs } from '@wordpress/url';
 // these as __experimental*; newer ones expose the stable name. Support both.
 const ToggleGroupControl = StableToggleGroupControl || ExperimentalToggleGroupControl;
 const ToggleGroupControlOption = StableToggleGroupControlOption || ExperimentalToggleGroupControlOption;
-const GradientPicker = StableGradientPicker || ExperimentalGradientPicker;
 
 const DEFAULT_TEMPLATES = {
 	he: '{name} חתם/ה על העצומה {time_ago}',
 	en: '{name} signed the petition {time_ago}',
 };
 
-const GRADIENT_PRESETS = [
-	{ name: __( 'ירוק־כחול', 'social-proof' ), gradient: 'linear-gradient(135deg,#1d9e75 0%,#0693e3 100%)', slug: 'green-blue' },
-	{ name: __( 'שקיעה', 'social-proof' ), gradient: 'linear-gradient(135deg,#fcb900 0%,#ff6900 100%)', slug: 'sunset' },
-	{ name: __( 'אפור עדין', 'social-proof' ), gradient: 'linear-gradient(135deg,#f1efe8 0%,#d3d1c7 100%)', slug: 'soft-gray' },
-];
+// Built by hand from two colors + an angle instead of using GradientPicker —
+// that component crashed ("Cannot read properties of undefined (reading
+// 'orientation')") on the greenpeace.org/israel dev site's older Gutenberg
+// bundle. ColorPalette + RangeControl are much older/simpler APIs with no
+// such history there.
+function getGradient( attributes ) {
+	const { gradientColor1, gradientColor2, gradientAngle } = attributes;
+	return `linear-gradient(${ gradientAngle }deg, ${ gradientColor1 } 0%, ${ gradientColor2 } 100%)`;
+}
 
 function getPillStyle( attributes ) {
-	const { textColor, backgroundType, backgroundColor, backgroundGradient } = attributes;
-	const background = 'gradient' === backgroundType && backgroundGradient ? backgroundGradient : backgroundColor;
+	const { textColor, backgroundType, backgroundColor } = attributes;
+	const background = 'gradient' === backgroundType ? getGradient( attributes ) : backgroundColor;
 	const style = {};
 	if ( textColor ) {
 		style.color = textColor;
@@ -59,7 +61,9 @@ export default function Edit( { attributes, setAttributes } ) {
 		textColor,
 		backgroundType,
 		backgroundColor,
-		backgroundGradient,
+		gradientColor1,
+		gradientColor2,
+		gradientAngle,
 		animationStyle,
 		fixedTimestamps,
 	} = attributes;
@@ -186,11 +190,25 @@ export default function Edit( { attributes, setAttributes } ) {
 						<ToggleGroupControlOption value="gradient" label={ __( 'מעבר גוונים', 'social-proof' ) } />
 					</ToggleGroupControl>
 					{ 'gradient' === backgroundType ? (
-						<GradientPicker
-							value={ backgroundGradient }
-							onChange={ ( value ) => setAttributes( { backgroundGradient: value || '' } ) }
-							gradients={ GRADIENT_PRESETS }
-						/>
+						<>
+							<p>{ __( 'צבע התחלה', 'social-proof' ) }</p>
+							<ColorPalette
+								value={ gradientColor1 }
+								onChange={ ( value ) => setAttributes( { gradientColor1: value || '#1d9e75' } ) }
+							/>
+							<p>{ __( 'צבע סיום', 'social-proof' ) }</p>
+							<ColorPalette
+								value={ gradientColor2 }
+								onChange={ ( value ) => setAttributes( { gradientColor2: value || '#0693e3' } ) }
+							/>
+							<RangeControl
+								label={ __( 'זווית מעבר הגוונים', 'social-proof' ) }
+								value={ gradientAngle }
+								onChange={ ( value ) => setAttributes( { gradientAngle: value ?? 135 } ) }
+								min={ 0 }
+								max={ 360 }
+							/>
+						</>
 					) : (
 						<ColorPalette
 							value={ backgroundColor }

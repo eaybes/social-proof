@@ -43,9 +43,17 @@
       "type": "string",
       "default": "#f0f0f0"
     },
-    "backgroundGradient": {
+    "gradientColor1": {
       "type": "string",
-      "default": ""
+      "default": "#1d9e75"
+    },
+    "gradientColor2": {
+      "type": "string",
+      "default": "#0693e3"
+    },
+    "gradientAngle": {
+      "type": "number",
+      "default": 135
     },
     "animationStyle": {
       "type": "string",
