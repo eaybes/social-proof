@@ -4,6 +4,10 @@ import {
 	PanelBody,
 	SelectControl,
 	TextControl,
+	ToggleControl,
+	ColorPalette,
+	GradientPicker as StableGradientPicker,
+	__experimentalGradientPicker as ExperimentalGradientPicker,
 	ToggleGroupControl as StableToggleGroupControl,
 	__experimentalToggleGroupControl as ExperimentalToggleGroupControl,
 	ToggleGroupControlOption as StableToggleGroupControlOption,
@@ -20,14 +24,45 @@ import { addQueryArgs } from '@wordpress/url';
 // these as __experimental*; newer ones expose the stable name. Support both.
 const ToggleGroupControl = StableToggleGroupControl || ExperimentalToggleGroupControl;
 const ToggleGroupControlOption = StableToggleGroupControlOption || ExperimentalToggleGroupControlOption;
+const GradientPicker = StableGradientPicker || ExperimentalGradientPicker;
 
 const DEFAULT_TEMPLATES = {
 	he: '{name} חתם/ה על העצומה {time_ago}',
 	en: '{name} signed the petition {time_ago}',
 };
 
+const GRADIENT_PRESETS = [
+	{ name: __( 'ירוק־כחול', 'social-proof' ), gradient: 'linear-gradient(135deg,#1d9e75 0%,#0693e3 100%)', slug: 'green-blue' },
+	{ name: __( 'שקיעה', 'social-proof' ), gradient: 'linear-gradient(135deg,#fcb900 0%,#ff6900 100%)', slug: 'sunset' },
+	{ name: __( 'אפור עדין', 'social-proof' ), gradient: 'linear-gradient(135deg,#f1efe8 0%,#d3d1c7 100%)', slug: 'soft-gray' },
+];
+
+function getPillStyle( attributes ) {
+	const { textColor, backgroundType, backgroundColor, backgroundGradient } = attributes;
+	const background = 'gradient' === backgroundType && backgroundGradient ? backgroundGradient : backgroundColor;
+	const style = {};
+	if ( textColor ) {
+		style.color = textColor;
+	}
+	if ( background ) {
+		style.background = background;
+	}
+	return style;
+}
+
 export default function Edit( { attributes, setAttributes } ) {
-	const { formId, template, language, align } = attributes;
+	const {
+		formId,
+		template,
+		language,
+		align,
+		textColor,
+		backgroundType,
+		backgroundColor,
+		backgroundGradient,
+		animationStyle,
+		fixedTimestamps,
+	} = attributes;
 	const [ forms, setForms ] = useState( [] );
 	const [ gfActive, setGfActive ] = useState( true );
 	const [ loadingForms, setLoadingForms ] = useState( true );
@@ -57,12 +92,13 @@ export default function Edit( { attributes, setAttributes } ) {
 				formId,
 				language,
 				template: template || DEFAULT_TEMPLATES[ language ],
+				fixedTimestamps,
 			} ),
 		} )
 			.then( ( res ) => setPreview( res.items || [] ) )
 			.catch( () => setPreview( [] ) )
 			.finally( () => setLoadingPreview( false ) );
-	}, [ formId, template, language ] );
+	}, [ formId, template, language, fixedTimestamps ] );
 
 	const blockProps = useBlockProps( {
 		className: `social-proof-align-${ align }`,
@@ -127,6 +163,52 @@ export default function Edit( { attributes, setAttributes } ) {
 						value={ template || DEFAULT_TEMPLATES[ language ] }
 						onChange={ ( value ) => setAttributes( { template: value } ) }
 					/>
+					<ToggleControl
+						label={ __( 'הסתר את זמן החתימה האמיתי', 'social-proof' ) }
+						help={ __( 'יוצגו זמנים קבועים במקום הזמן האמיתי: לפני דקה, לפני 3 דקות, לפני 10 דקות', 'social-proof' ) }
+						checked={ !! fixedTimestamps }
+						onChange={ ( value ) => setAttributes( { fixedTimestamps: value } ) }
+					/>
+				</PanelBody>
+				<PanelBody title={ __( 'צבעים', 'social-proof' ) } initialOpen={ false }>
+					<p>{ __( 'צבע טקסט', 'social-proof' ) }</p>
+					<ColorPalette
+						value={ textColor }
+						onChange={ ( value ) => setAttributes( { textColor: value || '' } ) }
+					/>
+					<ToggleGroupControl
+						label={ __( 'רקע', 'social-proof' ) }
+						value={ backgroundType }
+						isBlock
+						onChange={ ( value ) => setAttributes( { backgroundType: value } ) }
+					>
+						<ToggleGroupControlOption value="solid" label={ __( 'אחיד', 'social-proof' ) } />
+						<ToggleGroupControlOption value="gradient" label={ __( 'מעבר גוונים', 'social-proof' ) } />
+					</ToggleGroupControl>
+					{ 'gradient' === backgroundType ? (
+						<GradientPicker
+							value={ backgroundGradient }
+							onChange={ ( value ) => setAttributes( { backgroundGradient: value || '' } ) }
+							gradients={ GRADIENT_PRESETS }
+						/>
+					) : (
+						<ColorPalette
+							value={ backgroundColor }
+							onChange={ ( value ) => setAttributes( { backgroundColor: value || '' } ) }
+						/>
+					) }
+				</PanelBody>
+				<PanelBody title={ __( 'אנימציה', 'social-proof' ) } initialOpen={ false }>
+					<ToggleGroupControl
+						label={ __( 'סגנון מעבר בין שמות', 'social-proof' ) }
+						value={ animationStyle }
+						isBlock
+						onChange={ ( value ) => setAttributes( { animationStyle: value } ) }
+					>
+						<ToggleGroupControlOption value="fade" label={ __( 'עמעום', 'social-proof' ) } />
+						<ToggleGroupControlOption value="slide" label={ __( 'החלקה', 'social-proof' ) } />
+						<ToggleGroupControlOption value="float" label={ __( 'ריחוף', 'social-proof' ) } />
+					</ToggleGroupControl>
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
@@ -145,7 +227,11 @@ export default function Edit( { attributes, setAttributes } ) {
 					<p>{ __( 'אין עדיין חתימות להצגה עבור טופס זה.', 'social-proof' ) }</p>
 				) }
 				{ formId && ! loadingPreview && preview.length > 0 && (
-					<div className="social-proof__viewport">
+					<div
+						className="social-proof__viewport"
+						data-animation={ animationStyle }
+						style={ getPillStyle( attributes ) }
+					>
 						{ preview.map( ( text, index ) => (
 							<span
 								key={ index }

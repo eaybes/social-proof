@@ -12,7 +12,13 @@
 		"formId": { "type": "number", "default": 0 },
 		"template": { "type": "string", "default": "" },
 		"language": { "type": "string", "default": "he" },
-		"align": { "type": "string", "default": "right" }
+		"align": { "type": "string", "default": "right" },
+		"textColor": { "type": "string", "default": "" },
+		"backgroundType": { "type": "string", "default": "solid" },
+		"backgroundColor": { "type": "string", "default": "#f0f0f0" },
+		"backgroundGradient": { "type": "string", "default": "" },
+		"animationStyle": { "type": "string", "default": "fade" },
+		"fixedTimestamps": { "type": "boolean", "default": false }
 	},
 	"supports": {
 		"html": false,

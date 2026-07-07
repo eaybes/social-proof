@@ -45,6 +45,10 @@ class Social_Proof_REST {
 					'template' => array(
 						'type' => 'string',
 					),
+					'fixedTimestamps' => array(
+						'type'    => 'boolean',
+						'default' => false,
+					),
 				),
 				'callback'            => array( __CLASS__, 'get_preview' ),
 			)
@@ -82,15 +86,16 @@ class Social_Proof_REST {
 	}
 
 	public static function get_preview( WP_REST_Request $request ) {
-		$form_id  = (int) $request->get_param( 'formId' );
-		$language = $request->get_param( 'language' );
-		$template = $request->get_param( 'template' );
+		$form_id          = (int) $request->get_param( 'formId' );
+		$language         = $request->get_param( 'language' );
+		$template         = $request->get_param( 'template' );
+		$fixed_timestamps = (bool) $request->get_param( 'fixedTimestamps' );
 
 		if ( ! $template ) {
 			$template = Social_Proof_Gravity_Forms::default_template( $language );
 		}
 
-		$signatures = Social_Proof_Gravity_Forms::get_recent_signatures( $form_id, 3, $language );
+		$signatures = Social_Proof_Gravity_Forms::get_recent_signatures( $form_id, 3, $language, $fixed_timestamps );
 
 		$items = array_map(
 			function ( $sig ) use ( $template ) {

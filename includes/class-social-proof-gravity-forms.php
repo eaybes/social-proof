@@ -38,10 +38,14 @@ class Social_Proof_Gravity_Forms {
 		);
 	}
 
+	// Positional "X ago" values shown when fixedTimestamps is on, instead of
+	// the real elapsed time — 1 minute, 3 minutes, 10 minutes.
+	const FIXED_SECONDS_AGO = array( 60, 180, 600 );
+
 	/**
 	 * Returns up to $count most recent signatures as [ 'name' => ..., 'time_ago' => ... ].
 	 */
-	public static function get_recent_signatures( $form_id, $count = 3, $language = 'he' ) {
+	public static function get_recent_signatures( $form_id, $count = 3, $language = 'he', $fixed_timestamps = false ) {
 		if ( ! self::is_active() || ! $form_id ) {
 			return array();
 		}
@@ -49,10 +53,14 @@ class Social_Proof_Gravity_Forms {
 		$entries = self::get_cached_entries( $form_id );
 
 		$signatures = array();
-		foreach ( array_slice( $entries, 0, $count ) as $entry ) {
+		foreach ( array_slice( $entries, 0, $count ) as $index => $entry ) {
+			$timestamp = $entry['timestamp'];
+			if ( $fixed_timestamps && isset( self::FIXED_SECONDS_AGO[ $index ] ) ) {
+				$timestamp = time() - self::FIXED_SECONDS_AGO[ $index ];
+			}
 			$signatures[] = array(
 				'name'     => $entry['name'],
-				'time_ago' => self::time_ago( $entry['timestamp'], $language ),
+				'time_ago' => self::time_ago( $timestamp, $language ),
 			);
 		}
 
